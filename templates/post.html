@@ -5,11 +5,27 @@
     </div>
 
     <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}} by: {{p.blog_author}}
+      {{p.created.strftime("%b %d, %Y")}} by: {{p.author}}
     </div>
   </div>
+
+
 
   <div class="post-content">
     {{p._render_text | safe}}
   </div>
+
+
+<div>
+
+  <a class = "edit_post" href="/blog/editpost?p={{p.key().id()}}">Edit</a>
+  <a class = "edit_delete" href="/blog/delete?p={{p.key().id()}}">Delete</a>
+  <br>
+  <a class = "comment" href="/blog/comment?p={{p.key().id()}}">Comment</a>
+
+
 </div>
+
+</div>
+
+
