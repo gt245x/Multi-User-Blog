@@ -128,7 +128,10 @@ class Post(db.Model):
     last_modified = db.DateTimeProperty(auto_now = True)
     blog_author = db.StringProperty(required = True)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e4892e28c335a4662460e3cb190c6e62bb85efa6
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
@@ -203,17 +206,28 @@ class Logout(BlogHandler):
 
 
 class EditPost(BlogHandler):
+<<<<<<< HEAD
     def get(self, post_id):
         if self.user:
             key = db.Key.from_path('Post', int(post_id), parent = blog_key())
             post = db.get(key)
             if self.user.name == post.blog_author:
                 self.render('editpost.html',
+=======
+    def post(self, post_id):
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+            post = db.get(key)
+
+            if self.user.name == post.blog_author::
+                self.render('newpost.html',
+>>>>>>> e4892e28c335a4662460e3cb190c6e62bb85efa6
                             subject = post.subject,
                             content = post.content,
                             )
             else:
                 message = ("You can only edit a post created by you")
+<<<<<<< HEAD
                 self.render('editpost.html', error = message)
         else:
             self.redirect('/login')
@@ -236,6 +250,9 @@ class EditPost(BlogHandler):
         else:
             self.redirect('/login')
 
+=======
+                self.render
+>>>>>>> e4892e28c335a4662460e3cb190c6e62bb85efa6
 
 
 
@@ -256,6 +273,7 @@ class DeletePost(BlogHandler):
             self.redirect('/login')
 
 
+<<<<<<< HEAD
 class Like(db.Model):
     user_id = db.IntegerProperty(required = True)
     post_id = db.IntegerProperty(required = True)
@@ -270,6 +288,8 @@ class Comment(db.Model):
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("comment.html", p = self)
+=======
+>>>>>>> e4892e28c335a4662460e3cb190c6e62bb85efa6
 
 
 
@@ -285,8 +305,12 @@ app = webapp2.WSGIApplication([
     ('/blog/newpost', NewPost),
     ('/login', Login),
     ('/logout', Logout),
+<<<<<<< HEAD
     ('/blog/delete/([0-9]+)', DeletePost),
     ('/blog/editpost/([0-9]+)', EditPost)
+=======
+    ('/blog/delete/([0-9]+)', DeletePost)
+>>>>>>> e4892e28c335a4662460e3cb190c6e62bb85efa6
 ], debug=True)
 
 
