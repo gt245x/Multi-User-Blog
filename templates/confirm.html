@@ -2,8 +2,20 @@
 
 {% block content %}
 
+<span class = "msg">
 {{ message }}
+</span>
+<br/>
+<br/>
 
-<br>
+<button class="click_button" onclick="goBack()"> Back to previous page</button>
+
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
+
 
 {% endblock %}

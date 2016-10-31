@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>new post</h2>
+  <h2>New Post</h2>
 
-    <form method="post">
+    <form method="post" action="/blog/newpost">
       <label>
         <div>subject</div>
         <input type="text" name="subject" value="{{subject}}">
       </label>
 
       <label>
-        <div>blog</div>
+        <div>Blog</div>
         <textarea name="content">{{content}}</textarea>
       </label>
 
-      <input type="hidden" name="blog_author" value = {{user.name}}>
+      <input type="hidden" name="author" value = {{user.name}}>
 
       <div class="error">{{error}}</div>
 

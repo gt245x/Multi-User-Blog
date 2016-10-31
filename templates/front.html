@@ -2,9 +2,14 @@
 
 {% block content %}
 
+<h1>Blog Home</h1>
+<a class="new_post" href="/blog/newpost">New Post</a>
+
   {% for p in posts %}
     {{ p.render() | safe }}
     <br><br>
+
+
   {% endfor %}
 
 {% endblock %}

@@ -1,8 +1,10 @@
 <div class="post">
   <div class="post-heading">
+  <a href="/blog/{{p.key().id()}}">
     <div class="post-title">
       {{p.subject}}
     </div>
+    </a>
 
     <div class="post-date">
       {{p.created.strftime("%b %d, %Y")}} by: {{p.author}}
@@ -16,15 +18,24 @@
   </div>
 
 
-<div>
 
+
+  <a class = "like" href="/blog/likepost?p={{p.key().id()}}">&#128077; {{p.likes}}</a>
+  <a class = "dislike" href="/blog/dislikepost?p={{p.key().id()}}">&#128078; {{p.dislikes}}</a>
+
+
+
+
+
+<div class="post-footer">
   <a class = "edit_post" href="/blog/editpost?p={{p.key().id()}}">Edit</a>
-  <a class = "edit_delete" href="/blog/delete?p={{p.key().id()}}">Delete</a>
   <br>
-  <a class = "comment" href="/blog/comment?p={{p.key().id()}}">Comment</a>
+  <a class = "edit_delete" href="/blog/delete?p={{p.key().id()}}">Delete</a>
+ </div>
+ <div class = blog_comment>
+  <a href="/blog/comment?p={{p.key().id()}}">Make a Comment</a>
+  </div>
 
-
-</div>
 
 </div>
 
