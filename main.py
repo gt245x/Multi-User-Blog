@@ -71,63 +71,26 @@ class Signup(BlogHandler):
         if have_error:
             self.render('signup-form.html', **params)
         else:
-            self.redirect('/welcome?username=' + self.username)
+            self.done()
+    def done(self):
+        u = User.by_name(self.username)
+        if u:
+            msg = 'That username already exists.'
+            self.render('signup-form.html', username = self.username, error_username = msg)
+        else:
+            u = User.register(self.username, self.password, self.email)
+            u.put()
+            self.login_set_cookie(u)
+            self.redirect('/blog')
 
 class Welcome(BlogHandler):
     def get(self):
-        username = self.request.get('username')
-        if valid_username(username):
-            self.render('welcome.html', username = username)
+        if self.user:
+            self.render('welcome.html', username = self.user.name)
         else:
             self.redirect('/signup')
 
 
-class Register(BlogHandler):
-    """renders and handles registration for the blog page"""
-    def get(self):
-        self.render("signup-form.html")
-
-    def post(self):
-        have_error = False
-        self.username = self.request.get('username')
-        self.password = self.request.get('password')
-        self.verify = self.request.get('verify_password')
-        self.email = self.request.get('email')
-
-        params = dict(username = self.username, email = self.email)
-
-        if not valid_username(self.username):
-            params['error_username'] = "That's not a valid username."
-            have_error = True
-
-        if not valid_password(self.password):
-            params['error_password'] = "That wasn't a valid password."
-            have_error = True
-
-        elif self.password != self.verify:
-            params['error_verify'] = "Your passwords didn't match."
-            have_error = True
-
-        if not valid_email(self.email):
-            params['error_email'] = "That's not a valid email."
-            have_error = True
-
-        if have_error:
-            self.render('signup-form.html', **params)
-        else:
-            u = User.by_name(self.username) #
-            if u:
-                msg = 'That user already exists.'
-                self.render('signup-form.html', username = self.username, error_username = msg)
-            else:
-                u = User.register(self.username, self.password, self.email)
-                u.put()
-
-                self.login_set_cookie(u)
-                self.redirect('/blog')
-
-
-##
 
 class BlogFront(BlogHandler):
     """Renders the blog page with the top 10 posts"""
@@ -386,6 +349,7 @@ class Editcomment(BlogHandler):
 
 
 class LikePost(BlogHandler):
+    """Handles how many likes each post gets"""
     def get(self, post_id):
         if not self.user:
             self.redirect('/login')
@@ -413,6 +377,7 @@ class LikePost(BlogHandler):
 
 
 class DisLikePost(BlogHandler):
+    """Handles how many dislike each post gets"""
     def get(self, post_id):
         if not self.user:
             self.redirect('/login')
@@ -444,7 +409,6 @@ app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/signup', Signup),
     ('/welcome', Welcome),
-    ('/register', Register),
     ('/blog/?', BlogFront),
     ('/blog/([0-9]+)', PostPage),
     ('/blog/newpost', NewPost),
