@@ -15,7 +15,7 @@ template_dir = os.path.join(os.path.dirname(__file__),'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
 
 
-secret = 'good'
+secret = 'h6j2e#lc!UA8g#$1n2md4lYtv*#mkdGH'
 
 def make_secure_val(val):
     """takes a string and returns a string of the format s, HASH"""
