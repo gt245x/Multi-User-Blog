@@ -132,7 +132,7 @@ class Register(BlogHandler):
 class BlogFront(BlogHandler):
     """Renders the blog page with the top 10 posts"""
     def get(self):
-        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
+        posts = Post.all().order('-created')
         if self.user:
             self.render('front.html', posts = posts)
         else:
@@ -145,7 +145,8 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent = blog_key())
         post = db.get(key)
 
-        comments = db.GqlQuery("SELECT * from Comment where post_id = " + post_id + " ORDER BY created DESC")
+        comments = Comment.all().filter('post_id =', int(post_id)).order('-created')
+        # comments = db.GqlQuery("SELECT * FROM Comment where post_id = " + post_id + " ORDER BY created DESC")
 
         if not post:
             self.error(404)
@@ -165,7 +166,7 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
 
         subject = self.request.get("subject")
         content = self.request.get("content")
@@ -214,11 +215,13 @@ class Logout(BlogHandler):
 
 class EditPost(BlogHandler):
     """Renders and handles editing for each blog post"""
-    def get(self):
+    def get(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
         if self.user:
-            post_id = self.request.get("p")
-            key = db.Key.from_path('Post', int(post_id), parent = blog_key())
-            post = db.get(key)
             if self.user.name == post.author:
                 self.render('editpost.html',
                             subject = post.subject,
@@ -230,36 +233,48 @@ class EditPost(BlogHandler):
                 self.render('confirm.html', message = message)
         else:
             self.redirect('/login')
-    def post(self):
-        if self.user:
-            post_id = self.request.get("post_id")
+
+
+    def post(self, post_id):
+        if not self.user:
+            self.redirect ('/login')
+        else:
             key = db.Key.from_path('Post', int(post_id), parent = blog_key())
             post = db.get(key)
-            subject = self.request.get("subject")
-            content = self.request.get("content")
+            if post:
+                if self.user.name == post.author:
+                    subject = self.request.get("subject")
+                    content = self.request.get("content")
 
-            if subject and content:
-                post.subject = subject
-                post.content = content
-                post.put()
-                self.redirect('/blog/%s' % str(post.key().id()))
+                    if subject and content:
+                        post.subject = subject
+                        post.content = content
+                        post.put()
+                        self.redirect('/blog/%s' % str(post.key().id()))
 
+
+                    else:
+                        message = "subject and content, please!!!!!"
+                        self.render('editpost.html', subject = subject, content = content, error = message)
+                else:
+                    message = "Only the author can edit the post"
+                    self.render('confirm.html', message = message)
             else:
-                message = "subject and content, please!!!!!"
-                self.render('editpost.html', subject = subject, content = content, error = message)
-        else:
-            self.redirect('/login')
+                self.error(404)
+                return
 
 
 
 
 class DeletePost(BlogHandler):
     """Renders and handles deleting of each post"""
-    def get(self):
+    def get(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
         if self.user:
-            post_id = self.request.get("p")
-            key = db.Key.from_path('Post', int(post_id), parent = blog_key())
-            post = db.get(key)
             if self.user.name == post.author:
                 post.delete()
                 message = "The selected post was successfully deleted"
@@ -275,29 +290,30 @@ class DeletePost(BlogHandler):
 
 class CommentPost(BlogHandler):
     """Renders and handles new commenting for each post"""
-    def get(self):
+    def get(self, post_id):
         if self.user:
-            post_id = self.request.get("p")
             self.render("commentpost.html", post_id = post_id)
-
         else:
             redirect('/login')
 
-    def post(self):
+    def post(self, post_id):
         if self.user:
             comment_str = self.request.get("comment")
             created_by = self.request.get("created_by")
-            post_id = self.request.get("post_id")
-            post_key = db.Key.from_path('Post', int(post_id), parent = blog_key())
-            post = db.get(post_key)
+            key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+            post = db.get(key)
 
-            if comment_str and post_id:
+            if not post:
+                self.error(404)
+                return
+
+            if comment_str:
                 c = Comment(parent = blog_key(),
                             comment =comment_str,
                             created_by = created_by,
                             post_id = int(post_id))
                 c.put()
-                self.redirect('/blog/%s' % post_id)
+                self.redirect('/blog/%s' % post.key().id())
             else:
                 error = "Please add some comment"
                 self.render("commentpost.html", error = error)
@@ -306,12 +322,14 @@ class CommentPost(BlogHandler):
 
 class Deletecomment(BlogHandler):
     """Renders and handles deleting of each comment"""
-    def get(self):
+    def get(self,comment_id):
         if self.user:
-            comment_id = self.request.get("c")
             key = db.Key.from_path('Comment', int(comment_id), parent = blog_key())
             comment = db.get(key)
-            if comment and self.user.name == comment.created_by:
+            if not comment:
+                self.error(404)
+                return
+            if self.user.name == comment.created_by:
                 comment.delete()
                 message = "The selected comment was successfully deleted"
                 self.render('confirm.html', message = message)
@@ -323,81 +341,101 @@ class Deletecomment(BlogHandler):
 
 class Editcomment(BlogHandler):
     """Renders and handles editing og each comment"""
-    def get(self):
+    def get(self, post_id, comment_id):
+        key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+        post = db.get(key)
+        comment_key = db.Key.from_path('Comment', int(comment_id), parent = blog_key())
+        comment = db.get(comment_key)
+        if not post and comment:
+            self.error(404)
+            return
         if self.user:
-            comment_id = self.request.get("c")
-            key = db.Key.from_path('Comment', int(comment_id), parent = blog_key())
-            post = db.get(key)
-            if self.user.name == post.created_by:
-                self.render('editcomment.html', comment = post.comment, comment_id = comment_id)
+            if self.user.name == comment.created_by:
+                self.render('editcomment.html', comment = comment.comment)
             else:
-                msg = "You can only edit a comment that you created"
+                msg = "You can only edit a comment that you created."
                 self.render('confirm.html', message = msg)
+
         else:
             self.redirect('/login')
 
-    def post(self):
-        if self.user:
-            comment = self.request.get("comment")
-            comment_idd = self.request.get('comment_id')
-            comment_key = db.Key.from_path('Comment', long(comment_idd), parent = blog_key())
-            c = db.get(comment_key)
 
-
-            if comment:
-                c.comment = comment
-                c.put()
-                self.redirect('/blog')
-            else:
-                message = "Make sure your comments are added before submitting!!!"
-                self.render('editcomment.html', comment = comment, error = message)
-
-
-class LikePost(BlogHandler):
-    def get(self):
+    def post(self, post_id, comment_id):
         if not self.user:
             self.redirect('/login')
         else:
-            like_id = self.request.get('p')
-            like_key = db.Key.from_path('Post', int(like_id), parent = blog_key())
-            post = db.get(like_key)
+            key = db.Key.from_path('Post', int(comment_id), parent = blog_key())
+            post = db.get(key)
+            comment_key = db.Key.from_path('Comment', int(comment_id), parent = blog_key())
+            comment = db.get(comment_key)
+            if comment and post:
+                if self.user.name == comment.created_by:
+                    comment_str = self.request.get('comment')
+                    if comment_str:
+                        comment.comment = comment_str
+                        comment.put()
+                        self.redirect('/blog/%s' % str(post_id))
+                    else:
+                        message = "Make sure your comments are added before submitting!!!"
+                        self.render('editcomment.html', error = message)
+                else:
+                    message = "You can only edit comments that you created"
+                    self.render('editcomment.html', comment = comment, error = message)
+            else:
+                self.error(404)
+                return
+
+
+
+class LikePost(BlogHandler):
+    def get(self, post_id):
+        if not self.user:
+            self.redirect('/login')
+        else:
+            post_key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+            post = db.get(post_key)
             current_user = self.user.name
             post_author = post.author
 
-
-            if post_author != current_user and current_user not in post.liked_by_list:
-                post.likes +=1
-                post.liked_by_list.append(current_user)
-                post.put()
-                self.redirect('/blog')
+            if post:
+                if post_author != current_user and current_user not in post.liked_by_list:
+                    post.likes +=1
+                    post.liked_by_list.append(current_user)
+                    post.put()
+                    self.redirect('/blog')
+                else:
+                    message = "You cannot like the blog post more than once or like the post if you are the author"
+                    self.render('confirm.html', message = message)
             else:
-                message = "You cannot like the blog post more than once or like the post if you are the author"
-                self.render('confirm.html', message = message)
+                self.error(404)
+                return
 
 
 
 
 
 class DisLikePost(BlogHandler):
-    def get(self):
+    def get(self, post_id):
         if not self.user:
             self.redirect('/login')
         else:
-            dislike_id = self.request.get('p')
-            dislike_key = db.Key.from_path('Post', int(dislike_id), parent = blog_key())
-            post = db.get(dislike_key)
+            post_key = db.Key.from_path('Post', int(post_id), parent = blog_key())
+            post = db.get(post_key)
             current_user = self.user.name
             post_author = post.author
 
-
-            if post_author != current_user and current_user not in post.liked_by_list:
-                post.dislikes +=1
-                post.liked_by_list.append(current_user)
-                post.put()
-                self.redirect('/blog')
+            if post:
+                if post_author != current_user and current_user not in post.liked_by_list:
+                    post.dislikes +=1
+                    post.liked_by_list.append(current_user)
+                    post.put()
+                    self.redirect('/blog')
+                else:
+                    message = "You cannot dislike the blog post more than once or dislike the post if you are the author"
+                    self.render('confirm.html', message = message)
             else:
-                message = "You cannot dislike the blog post more than once or dislike the post if you are the author"
-                self.render('confirm.html', message = message)
+                self.error(404)
+                return
 
 
 
@@ -414,13 +452,13 @@ app = webapp2.WSGIApplication([
     ('/blog/newpost', NewPost),
     ('/login', Login),
     ('/logout', Logout),
-    ('/blog/delete', DeletePost),
-    ('/blog/editpost', EditPost),
-    ('/blog/comment', CommentPost),
-    ('/blog/deletecomment', Deletecomment),
-    ('/blog/editcomment', Editcomment),
-    ('/blog/likepost', LikePost),
-    ('/blog/dislikepost', DisLikePost)
+    ('/blog/delete/([0-9]+)', DeletePost),
+    ('/blog/editpost/([0-9]+)', EditPost),
+    ('/blog/comment/([0-9]+)', CommentPost),
+    ('/blog/deletecomment/([0-9]+)', Deletecomment),
+    ('/blog/editcomment/([0-9]+)/([0-9]+)', Editcomment),
+    ('/blog/likepost/([0-9]+)', LikePost),
+    ('/blog/dislikepost/([0-9]+)', DisLikePost)
 ], debug=True)
 
 
