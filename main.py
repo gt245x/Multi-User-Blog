@@ -366,7 +366,7 @@ class Editcomment(BlogHandler):
             post = db.get(key)
             comment_key = db.Key.from_path('Comment', int(comment_id), parent = blog_key())
             comment = db.get(comment_key)
-            if comment and post:
+            if comment:
                 if self.user.name == comment.created_by:
                     comment_str = self.request.get('comment')
                     if comment_str:
