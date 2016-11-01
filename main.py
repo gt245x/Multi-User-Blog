@@ -133,10 +133,8 @@ class BlogFront(BlogHandler):
     """Renders the blog page with the top 10 posts"""
     def get(self):
         posts = Post.all().order('-created')
-        if self.user:
-            self.render('front.html', posts = posts)
-        else:
-            self.redirect('/login')
+        self.render('front.html', posts = posts)
+
 
 
 class PostPage(BlogHandler):
@@ -166,7 +164,7 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            self.redirect('/blog')
 
         subject = self.request.get("subject")
         content = self.request.get("content")
