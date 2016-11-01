@@ -20,20 +20,20 @@
 
 
 
-  <a class = "like" href="/blog/likepost?p={{p.key().id()}}">&#128077; {{p.likes}}</a>
-  <a class = "dislike" href="/blog/dislikepost?p={{p.key().id()}}">&#128078; {{p.dislikes}}</a>
+  <a class = "like" href="/blog/likepost/{{p.key().id()}}">&#128077; {{p.likes}}</a>
+  <a class = "dislike" href="/blog/dislikepost/{{p.key().id()}}">&#128078; {{p.dislikes}}</a>
 
 
 
 
 
 <div class="post-footer">
-  <a class = "edit_post" href="/blog/editpost?p={{p.key().id()}}">Edit</a>
+  <a class = "edit_post" href="/blog/editpost/{{p.key().id()}}">Edit</a>
   <br>
-  <a class = "edit_delete" href="/blog/delete?p={{p.key().id()}}">Delete</a>
+  <a class = "edit_delete" href="/blog/delete/{{p.key().id()}}">Delete</a>
  </div>
  <div class = blog_comment>
-  <a href="/blog/comment?p={{p.key().id()}}">Make a Comment</a>
+  <a href="/blog/comment/{{p.key().id()}}">Make a Comment</a>
   </div>
 
 

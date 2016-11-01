@@ -3,16 +3,21 @@
 {% block content %}
   {{post.render() | safe}}
 
+
+
   {% for c in comments %}
 
   <p class = "comments_block">{{c.formatted_comment()}}</p>
   <div class= "comments_align">
-  comments by: {{c.created_by}} <a class = "delete_button" href="/blog/deletecomment?c={{c.key().id()}}">Delete</a> |
-  <a class = "edit_button" href="/blog/editcomment?c={{c.key().id()}}">Edit</a>
+  comments by: {{c.created_by}} <a class = "delete_button" href="/blog/deletecomment/{{c.key().id()}}">Delete</a> |
+  <a class = "edit_button" href="/blog/editcomment/{{post.key().id()}}/{{c.key().id()}}">Edit</a>
+
 
    </div>
    <hr>
 
   {% endfor %}
+
+
 
 {% endblock %}
