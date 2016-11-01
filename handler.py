@@ -9,6 +9,8 @@ import hmac
 
 from google.appengine.ext import db
 
+
+
 template_dir = os.path.join(os.path.dirname(__file__),'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir))
 
@@ -92,8 +94,6 @@ class BlogHandler(webapp2.RequestHandler):
         """logs out the user by setting their cookie to empty"""
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-
-
 class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
@@ -121,6 +121,8 @@ class User(db.Model):
         u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
+
+
 
 
 ######
